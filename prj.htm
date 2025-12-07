@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Stack vs Queue Visualizer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap');
+
+:root{
+  --bg:#f7f9fc;
+  --card:#fff;
+  --border:#d8e0ea;
+  --elem:#6ec6ff;              
+  --add:#4ac26b;              
+  --remove:#ff6464;
+  --blue-btn:#5c6bc0;
+  --blue-btn-h:#4756a8;
+  --orange:#ff9f43;
+  --orange-h:#ff8b1d;
+  --warn:#ff4d4d;
+  --green:#2ecc71;
+}
+
+/* GLOBAL */
+*{box-sizing:border-box;}
+
+body{
+  background:var(--bg);
+  font-family:"Poppins",sans-serif;
+  padding:40px;
+  margin:0;
+  text-align:center;
+  color:#222;
+}
+
+/* TITLE */
+h1{
+  font-size:32px;
+  font-weight:700;
+  color:#000;
+  margin-bottom:10px;
+}
+
+/* SIZE INPUT */
+#sizeBox{
+  margin-bottom:25px;
+}
+#sizeInput{
+  padding:10px;
+  width:200px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  font-size:15px;
+}
+#setSizeBtn{
+  padding:10px 20px;
+  background:var(--blue-btn);
+  color:white;
+  border:none;
+  border-radius:8px;
+  margin-left:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+#setSizeBtn:hover{
+  background:var(--blue-btn-h);
+}
+
+#sizeDisplay{
+  margin-top:10px;
+  font-weight:600;
+}
+
+/* LAYOUT */
+.wrapper{
+  display:flex;
+  justify-content:center;
+  gap:50px;
+  flex-wrap:wrap;
+}
+
+/* CONTAINER */
+.container{
+  width:350px;
+  background:var(--card);
+  padding:24px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  box-shadow:0 12px 24px rgba(0,0,0,0.08);
+}
+
+.title{
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:16px;
+}
+
+/* BOXES */
+.box{
+  background:#f0faff;
+  border:1.5px dashed var(--border);
+  border-radius:12px;
+  padding:16px;
+  min-height:150px;
+  transition:0.25s;
+  display:flex;
+  flex-direction:column-reverse;
+  gap:12px;
+}
+
+.queue-box{
+  display:flex;
+  flex-direction:row;
+  overflow-x:auto;
+  gap:14px;
+}
+
+/* FLASH COLORS */
+.box.flash-red{
+  background:#ffe5e5 !important;
+  border:2px solid var(--warn) !important;
+}
+.box.flash-green{
+  background:#e9ffe9 !important;
+  border:2px solid var(--green) !important;
+}
+
+/* ELEMENT */
+.element{
+  background:var(--elem);
+  padding:10px 16px;
+  color:white;
+  font-weight:600;
+  border-radius:10px;
+  box-shadow:0 6px 12px rgba(0,0,0,0.1);
+  transition:0.2s;
+}
+.element.add{
+  background:var(--add) !important;
+  transform:scale(1.05);
+}
+.element.remove{
+  background:var(--remove) !important;
+  transform:scale(0.95);
+  opacity:0.7;
+}
+
+/* INPUT */
+input{
+  width:92%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  margin-top:12px;
+}
+
+/* BUTTONS */
+.btn{
+  padding:12px;
+  border-radius:10px;
+  background:var(--blue-btn);
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+.btn:hover{
+  background:var(--blue-btn-h);
+}
+
+.orange-btn{
+  background:var(--orange);
+}
+.orange-btn:hover{
+  background:var(--orange-h);
+}
+
+/* BUTTON ROWS */
+.op-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+}
+.op-row button{
+  flex:1;
+}
+
+/* LOG */
+#logBox{
+  width:85%;
+  margin:40px auto;
+  background:white;
+  border-radius:12px;
+  padding:18px;
+  border:1px solid var(--border);
+  min-height:140px;
+  text-align:left;
+  box-shadow:0 8px 20px rgba(0,0,0,0.06);
+}
+.log-entry{
+  background:#e8f5ff;
+  padding:10px;
+  border-left:5px solid var(--elem);
+  border-radius:8px;
+  margin-bottom:10px;
+}
+
+/* POPUPS */
+#warningBox{
+  position:fixed;
+  top:20px; right:20px;
+  background:var(--warn);
+  color:white;
+  padding:14px 20px;
+  border-radius:10px;
+  font-weight:600;
+  display:none;
+  z-index:1000;
+}
+#successBox{
+  position:fixed;
+  top:20px; left:20px;
+  background:var(--green);
+  color:white;
+  padding:14px 20px;
+  border-radius:10px;
+  font-weight:600;
+  display:none;
+  z-index:1000;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Stack vs Queue Visualizer</h1>
+
+<!-- SIZE INPUT -->
+<div id="sizeBox">
+  <input id="sizeInput" placeholder="Enter size (e.g. 5)">
+  <button id="setSizeBtn" onclick="setSize()">Set Size</button>
+  <div id="sizeDisplay"></div>
+</div>
+
+<div id="warningBox"></div>
+<div id="successBox"></div>
+
+<div class="wrapper">
+
+  <!-- STACK -->
+  <div class="container">
+    <div class="title">STACK (LIFO)</div>
+
+    <div id="stack" class="box"></div>
+
+    <input id="stackInput" placeholder="Enter value">
+
+    <!-- ROW 1: Push Pop Peek -->
+    <div class="op-row">
+      <button class="btn" onclick="pushStack()">PUSH</button>
+      <button class="btn orange-btn" onclick="popStack()">POP</button>
+      <button class="btn" onclick="peekStack()">PEEK</button>
+    </div>
+
+    <!-- ROW 2: Empty Full -->
+    <div class="op-row">
+      <button class="btn" onclick="isEmptyStack()">IS EMPTY?</button>
+      <button class="btn" onclick="isFullStack()">IS FULL?</button>
+    </div>
+  </div>
+
+  <!-- QUEUE -->
+  <div class="container">
+    <div class="title">QUEUE (FIFO)</div>
+
+    <div id="queue" class="box queue-box"></div>
+
+    <input id="queueInput" placeholder="Enter value">
+
+    <div class="op-row">
+      <button class="btn" onclick="enqueue()">ENQUEUE</button>
+      <button class="btn orange-btn" onclick="dequeue()">DEQUEUE</button>
+      <button class="btn" onclick="peekQueue()">PEEK</button>
+    </div>
+
+    <div class="op-row">
+      <button class="btn" onclick="isEmptyQueue()">IS EMPTY?</button>
+      <button class="btn" onclick="isFullQueue()">IS FULL?</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="logBox"></div>
+
+<script>
+let MAX_SIZE = 0;
+let sizeSet = false;
+
+/* POPUPS */
+function warn(msg){
+  const w=document.getElementById("warningBox");
+  w.innerText=msg;
+  w.style.display="block";
+  setTimeout(()=>w.style.display="none",1300);
+}
+function success(msg){
+  const s=document.getElementById("successBox");
+  s.innerText=msg;
+  s.style.display="block";
+  setTimeout(()=>s.style.display="none",1300);
+}
+
+/* SIZE SET */
+function setSize(){
+  const v=document.getElementById("sizeInput").value.trim();
+
+  if(!v || isNaN(v) || v<=0){
+    warn("Enter a valid positive size!");
+    return;
+  }
+
+  MAX_SIZE=parseInt(v);
+  sizeSet=true;
+
+  document.getElementById("sizeDisplay").innerHTML =
+    Current size: <b>0 / ${MAX_SIZE}</b>;
+
+  log("✔ Size set to " + MAX_SIZE);
+  document.getElementById("sizeInput").value="";
+}
+
+function updateCount(){
+  const st=document.getElementById("stack").children.length;
+  const q=document.getElementById("queue").children.length;
+
+  document.getElementById("sizeDisplay").innerHTML=
+    Stack: <b>${st}/${MAX_SIZE}</b> | Queue: <b>${q}/${MAX_SIZE}</b>;
+}
+
+/* LOGGING */
+function log(msg){
+  const box=document.getElementById("logBox");
+  const e=document.createElement("div");
+  e.className="log-entry";
+  e.textContent=msg;
+  box.appendChild(e);
+  box.scrollTop=box.scrollHeight;
+}
+
+/* FLASH COLORS */
+function flashRed(box){
+  box.classList.add("flash-red");
+  setTimeout(()=>box.classList.remove("flash-red"),500);
+}
+function flashGreen(box){
+  box.classList.add("flash-green");
+  setTimeout(()=>box.classList.remove("flash-green"),500);
+}
+
+/* ---------------- STACK ---------------- */
+
+function pushStack(){
+  const stack=document.getElementById("stack");
+  const v=document.getElementById("stackInput").value.trim();
+
+  if(!sizeSet){ warn("Set size first!"); return; }
+  if(!v) return;
+
+  if(stack.children.length >= MAX_SIZE){
+    warn("STACK OVERFLOW!");
+    flashRed(stack);
+    log("⚠ STACK OVERFLOW");
+    return;
+  }
+
+  const el=document.createElement("div");
+  el.className="element add";
+  el.textContent=v;
+
+  stack.appendChild(el);
+  setTimeout(()=>el.classList.remove("add"),200);
+
+  log("PUSH → " + v);
+  document.getElementById("stackInput").value="";
+  updateCount();
+}
+
+function popStack(){
+  const stack=document.getElementById("stack");
+  const el=stack.lastElementChild;
+
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  if(!el){
+    warn("STACK UNDERFLOW!");
+    flashRed(stack);
+    log("⚠ STACK UNDERFLOW");
+    return;
+  }
+
+  el.classList.add("remove");
+  setTimeout(()=>el.remove(),200);
+
+  log("POP");
+  updateCount();
+}
+
+function peekStack(){
+  const stack=document.getElementById("stack");
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  const el=stack.lastElementChild;
+
+  if(!el){
+    warn("STACK EMPTY!");
+    log("⚠ PEEK failed → Stack empty");
+    flashRed(stack);
+    return;
+  }
+
+  log("PEEK → " + el.textContent);
+  flashGreen(stack);
+  success("Top element: " + el.textContent);
+}
+
+function isEmptyStack(){
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  const box=document.getElementById("stack");
+  const count=box.children.length;
+
+  if(count===0){
+    success("Stack is EMPTY");
+    flashGreen(box);
+    log("Stack is EMPTY");
+  } else {
+    warn("Stack is NOT empty");
+    flashRed(box);
+    log("Stack is NOT empty");
+  }
+}
+
+function isFullStack(){
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  const box=document.getElementById("stack");
+  const count=box.children.length;
+
+  if(count===MAX_SIZE){
+    success("Stack is FULL");
+    flashGreen(box);
+    log("Stack is FULL");
+  } else {
+    warn("Stack is NOT full");
+    flashRed(box);
+    log("Stack is NOT full");
+  }
+}
+
+/* ---------------- QUEUE ---------------- */
+
+function enqueue(){
+  const queue=document.getElementById("queue");
+  const v=document.getElementById("queueInput").value.trim();
+
+  if(!sizeSet){ warn("Set size first!"); return; }
+  if(!v) return;
+
+  if(queue.children.length >= MAX_SIZE){
+    warn("QUEUE OVERFLOW!");
+    flashRed(queue);
+    log("⚠ QUEUE OVERFLOW");
+    return;
+  }
+
+  const el=document.createElement("div");
+  el.className="element add";
+  el.textContent=v;
+
+  queue.appendChild(el);
+  setTimeout(()=>el.classList.remove("add"),200);
+
+  log("ENQUEUE → " + v);
+  document.getElementById("queueInput").value="";
+  updateCount();
+}
+
+function dequeue(){
+  const queue=document.getElementById("queue");
+  const el=queue.firstElementChild;
+
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  if(!el){
+    warn("QUEUE UNDERFLOW!");
+    flashRed(queue);
+    log("⚠ QUEUE UNDERFLOW");
+    return;
+  }
+
+  el.classList.add("remove");
+  setTimeout(()=>el.remove(),200);
+
+  log("DEQUEUE");
+  updateCount();
+}
+
+function peekQueue(){
+  const queue=document.getElementById("queue");
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  const el=queue.firstElementChild;
+
+  if(!el){
+    warn("QUEUE EMPTY!");
+    log("⚠ PEEK failed → Queue empty");
+    flashRed(queue);
+    return;
+  }
+
+  log("PEEK → " + el.textContent);
+  flashGreen(queue);
+  success("Front element: " + el.textContent);
+}
+
+function isEmptyQueue(){
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  const box=document.getElementById("queue");
+  const count=box.children.length;
+
+  if(count===0){
+    success("Queue is EMPTY");
+    flashGreen(box);
+    log("Queue is EMPTY");
+  } else {
+    warn("Queue is NOT empty");
+    flashRed(box);
+    log("Queue is NOT empty");
+  }
+}
+
+function isFullQueue(){
+  if(!sizeSet){ warn("Set size first!"); return; }
+
+  const box=document.getElementById("queue");
+  const count=box.children.length;
+
+  if(count===MAX_SIZE){
+    success("Queue is FULL");
+    flashGreen(box);
+    log("Queue is FULL");
+  } else {
+    warn("Queue is NOT full");
+    flashRed(box);
+    log("Queue is NOT full");
+  }
+}
+</script>
+
+</body>
+</html>
